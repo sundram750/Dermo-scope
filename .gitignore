@@ -1,0 +1,19 @@
+# Virtual environment
+.venv/
+env/
+venv/
+__pycache__/
+
+# Datasets & large files
+raw_data/
+organized_data/
+model_training/saved_model.h5
+*.h5
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
