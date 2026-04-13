@@ -50,7 +50,7 @@ major_project/
 │   ├── confusion_matrix.png    # Confusion matrix (generated)
 │   └── classification_report.txt
 ├── app/
-│   ├── main.py                 # Streamlit web application
+│   ├── app.py                  # Streamlit web application
 │   └── utils.py                # Grad-CAM, preprocessing, inference
 ├── raw_data/                   # Place HAM10000 images + CSV here
 ├── organized_data/             # Auto-generated class folders
@@ -166,7 +166,7 @@ Generated files:
 
 ```bash
 cd major_project
-streamlit run app/main.py
+streamlit run app/app.py
 ```
 
 Open your browser at: **http://localhost:8501**
