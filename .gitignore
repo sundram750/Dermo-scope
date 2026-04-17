@@ -8,7 +8,7 @@ __pycache__/
 raw_data/
 organized_data/
 # model_training/saved_model.h5
-*.h5
+# *.h5
 
 # OS generated files
 .DS_Store
