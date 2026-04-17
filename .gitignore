@@ -7,7 +7,7 @@ __pycache__/
 # Datasets & large files
 raw_data/
 organized_data/
-model_training/saved_model.h5
+# model_training/saved_model.h5
 *.h5
 
 # OS generated files
