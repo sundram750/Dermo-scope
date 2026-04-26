@@ -222,6 +222,17 @@ with st.sidebar:
         )
 
     st.markdown("---")
+    st.markdown("### 🔍 The ABCDEs of Melanoma")
+    st.caption("Early detection markers for irregular lesions:")
+    st.markdown("""
+    - **A**symmetry: One half doesn't match the other.
+    - **B**order: Edges are ragged or blurred.
+    - **C**olor: Uneven shades of brown, black, or red.
+    - **D**iameter: Larger than 6mm (pencil eraser).
+    - **E**volving: Changes in size, shape, or color.
+    """)
+
+    st.markdown("---")
     st.caption("Dermo-Scope v1.0 · HAM10000 Dataset")
 
 # ────────────────────────────────────────────────────────────
@@ -307,18 +318,26 @@ def render_results(result: dict):
     st.markdown(f"<p style='color:#7f8ccd; margin:0 0 0.6rem; font-size:0.9rem;'>🔬 <b>{full_name}</b></p>",
                 unsafe_allow_html=True)
 
-    # ── Top-3 probabilities ──
-    st.markdown('<div class="section-title">Top 3 Predictions</div>', unsafe_allow_html=True)
-    for name, prob in top3:
+    # ── All Classes probabilities ──
+    st.markdown('<div class="section-title">All Class Probabilities</div>', unsafe_allow_html=True)
+    all_probs = result.get("all_probs", top3)  # fallback to top3 if missing
+    for name, prob in all_probs:
         bar_color = "#ef5350" if name in HIGH_RISK_CLASSES else "#66bb6a"
-        pct = int(prob * 100)
+        pct = round(prob * 100, 1)
+        is_top = name == cls
+        weight = "font-weight:700;" if is_top else ""
+        border = f"border-left: 3px solid {bar_color};" if is_top else ""
         st.markdown(f"""
-        <div class="prob-bar-wrapper">
-            <div class="prob-label">{name.upper()} – {CLASS_INFO[name]['full_name'][:35]}&nbsp;&nbsp;<b>{pct}%</b></div>
+        <div class="prob-bar-wrapper" style="{border} padding-left:6px;">
+            <div class="prob-label" style="{weight}">{name.upper()} – {CLASS_INFO[name]['full_name'][:38]}&nbsp;&nbsp;<b>{pct}%</b></div>
             <div class="prob-bar-bg">
                 <div class="prob-bar-fill" style="width:{pct}%; background:{bar_color};"></div>
             </div>
         </div>""", unsafe_allow_html=True)
+
+    # ── Low Confidence Warning ──
+    if conf < 0.60:
+        st.warning("⚠️ **Low Confidence (*{pct}%*):** The model is not highly confident. Please ensure the image is a clear, well-lit, close-up shot of the skin lesion.".format(pct=int(conf*100)))
 
     # ── Grad-CAM ──
     if result.get("gradcam_overlay") is not None:
@@ -346,7 +365,16 @@ def demo_prediction(image_rgb: np.ndarray) -> dict:
     conf = float(np.random.uniform(0.55, 0.92))
     others = [c for c in CLASS_NAMES if c != cls]
     random.shuffle(others)
-    top3 = [(cls, conf)] + [(others[i], float(np.random.uniform(0.02, 0.2))) for i in range(2)]
+    # Build all 7 class scores
+    remaining = 1 - conf
+    splits = sorted([float(np.random.uniform(0, 1)) for _ in range(len(others) - 1)])
+    splits = [0] + splits + [1]
+    other_scores = [remaining * (splits[i+1] - splits[i]) for i in range(len(others))]
+    all_probs = sorted(
+        [(cls, conf)] + [(others[i], other_scores[i]) for i in range(len(others))],
+        key=lambda x: x[1], reverse=True
+    )
+    top3 = all_probs[:3]
     info = CLASS_INFO[cls]
     return {
         "predicted_class": cls,
@@ -355,6 +383,7 @@ def demo_prediction(image_rgb: np.ndarray) -> dict:
         "risk":            info["risk"],
         "risk_color":      info["color"],
         "top3":            top3,
+        "all_probs":       all_probs,
         "gradcam_overlay": None,
     }
 

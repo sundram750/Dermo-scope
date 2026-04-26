@@ -24,6 +24,7 @@ from tensorflow.keras.callbacks import (
 )
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.utils.class_weight import compute_class_weight
 import seaborn as sns
 
 # ---------------------------------------------
@@ -136,11 +137,21 @@ def build_callbacks():
 # 4. Training
 # ---------------------------------------------
 def train_model(model: Model, train_gen, val_gen):
+    print("\n[...] Computing class weights ...")
+    class_weights = compute_class_weight(
+        class_weight="balanced",
+        classes=np.unique(train_gen.classes),
+        y=train_gen.classes
+    )
+    class_weight_dict = dict(enumerate(class_weights))
+    print(f"[OK] Class weights: {class_weight_dict}\n")
+
     history = model.fit(
         train_gen,
         epochs=EPOCHS,
         validation_data=val_gen,
         callbacks=build_callbacks(),
+        class_weight=class_weight_dict,
         verbose=1,
     )
     return history

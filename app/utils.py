@@ -238,9 +238,12 @@ def process_image(
     top_class = CLASS_NAMES[top_idx]
     confidence = float(predictions[top_idx])
 
-    # Top-3 predictions
-    top3_indices = np.argsort(predictions)[::-1][:3]
-    top3 = [(CLASS_NAMES[i], float(predictions[i])) for i in top3_indices]
+    # All predictions sorted by confidence (descending)
+    all_indices = np.argsort(predictions)[::-1]
+    all_probs = [(CLASS_NAMES[i], float(predictions[i])) for i in all_indices]
+
+    # Top-3 predictions (kept for backward compat)
+    top3 = all_probs[:3]
 
     info = CLASS_INFO[top_class]
     risk = info["risk"]
@@ -259,6 +262,7 @@ def process_image(
         "risk":            risk,
         "risk_color":      risk_color,
         "top3":            top3,
+        "all_probs":       all_probs,
         "gradcam_overlay": gradcam_overlay,
     }
 
