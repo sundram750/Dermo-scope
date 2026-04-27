@@ -26,36 +26,50 @@ CLASS_INFO = {
         "full_name": "Actinic Keratoses / Intraepithelial Carcinoma",
         "risk":      "High",
         "color":     (220, 53, 69),       # Red
+        "description": "A pre-cancerous patch of thick, scaly, or crusty skin. It forms when skin is damaged by UV radiation.",
+        "recommendation": "Consult a dermatologist immediately for evaluation and potential biopsy or removal.",
     },
     "bcc": {
         "full_name": "Basal Cell Carcinoma",
         "risk":      "High",
         "color":     (220, 53, 69),
+        "description": "The most common form of skin cancer. It usually appears as a slightly transparent bump on the skin.",
+        "recommendation": "Requires professional medical attention. BCCs are highly treatable when caught early.",
     },
     "bkl": {
         "full_name": "Benign Keratosis",
         "risk":      "Low",
         "color":     (40, 167, 69),       # Green
+        "description": "A common non-cancerous skin growth that usually appears as a brown, black or light tan growth.",
+        "recommendation": "Generally harmless and requires no treatment unless it becomes irritated or bleeds.",
     },
     "df": {
         "full_name": "Dermatofibroma",
         "risk":      "Low",
         "color":     (40, 167, 69),
+        "description": "Common, benign skin growths that tend to be firm and often have a slightly darker color at the edges.",
+        "recommendation": "Usually harmless. Monitor for any rapid changes in size, shape, or color.",
     },
     "mel": {
         "full_name": "Melanoma",
         "risk":      "High",
         "color":     (220, 53, 69),
+        "description": "The most serious type of skin cancer. It develops in the cells (melanocytes) that produce melanin.",
+        "recommendation": "URGENT: Consult a dermatologist immediately. Early detection is critical for successful treatment.",
     },
     "nv": {
         "full_name": "Melanocytic Nevi",
         "risk":      "Low",
         "color":     (40, 167, 69),
+        "description": "Common moles. They are benign neoplasms of pigment-forming cells.",
+        "recommendation": "Generally harmless. Perform regular self-checks using the ABCDEs of melanoma.",
     },
     "vasc": {
         "full_name": "Vascular Lesions",
         "risk":      "Low",
         "color":     (40, 167, 69),
+        "description": "A relatively common abnormality of the skin and underlying tissues, more commonly known as a birthmark.",
+        "recommendation": "Usually benign. If it bleeds frequently or changes rapidly, consult a doctor.",
     },
 }
 

@@ -31,6 +31,12 @@ st.set_page_config(
 # ── Local imports ──
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ui_components import (
+    render_metric_cards,
+    render_plotly_probabilities,
+    render_dynamic_insights,
+    get_downloadable_report
+)
 from utils import (
     load_classification_model,
     process_image,
@@ -59,118 +65,8 @@ MODEL_PATH = BASE_DIR / "model_training" / "saved_model.h5"
 # ────────────────────────────────────────────────────────────
 # Custom CSS
 # ────────────────────────────────────────────────────────────
-CUSTOM_CSS = """
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-}
-
-/* ── Header ── */
-.main-header {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    padding: 2rem 2.5rem;
-    border-radius: 16px;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    text-align: center;
-}
-.main-header h1 {
-    color: #e94560;
-    font-size: 2.6rem;
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: -1px;
-}
-.main-header p {
-    color: #a8b2d8;
-    font-size: 1rem;
-    margin: 0.5rem 0 0;
-}
-
-/* ── Metric Cards ── */
-.metric-card {
-    background: linear-gradient(135deg, #1e2140, #252b50);
-    border-radius: 12px;
-    padding: 1.2rem 1.5rem;
-    text-align: center;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-    border: 1px solid rgba(255,255,255,0.06);
-}
-.metric-label {
-    color: #7f8ccd;
-    font-size: 0.78rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 0.4rem;
-}
-.metric-value {
-    font-size: 1.7rem;
-    font-weight: 700;
-    line-height: 1.2;
-}
-.high-risk { color: #ef5350; }
-.low-risk  { color: #66bb6a; }
-
-/* ── Top-3 bars ── */
-.prob-bar-wrapper { margin-bottom: 0.6rem; }
-.prob-label       { font-size: 0.82rem; color: #c5cae9; margin-bottom: 2px; }
-.prob-bar-bg {
-    background: rgba(255,255,255,0.06);
-    border-radius: 6px;
-    height: 10px;
-    overflow: hidden;
-}
-.prob-bar-fill {
-    height: 10px;
-    border-radius: 6px;
-    transition: width 0.5s ease;
-}
-
-/* ── Section headings ── */
-.section-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #e2e8f0;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin: 1.2rem 0 0.8rem;
-    padding-left: 6px;
-    border-left: 3px solid #e94560;
-}
-
-/* ── Grad-CAM container ── */
-.gradcam-note {
-    background: rgba(233, 69, 96, 0.08);
-    border: 1px solid rgba(233, 69, 96, 0.3);
-    border-radius: 10px;
-    padding: 0.8rem 1rem;
-    font-size: 0.82rem;
-    color: #ef9a9a;
-    margin-top: 0.5rem;
-}
-
-/* ── Sidebar ── */
-.risk-legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 6px 0;
-    font-size: 0.85rem;
-}
-.risk-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-/* General dark override */
-.stApp { background-color: #0d1117; }
-</style>
-"""
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+with open(BASE_DIR / "app" / "style.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ────────────────────────────────────────────────────────────
 # Header
@@ -258,102 +154,51 @@ else:
 # ────────────────────────────────────────────────────────────
 def render_results(result: dict):
     """Display prediction metrics, probability bars, and Grad-CAM."""
-    cls       = result["predicted_class"]
-    conf      = result["confidence"]
-    risk      = result["risk"]
-    full_name = result["full_name"]
-    top3      = result["top3"]
-    risk_css  = "high-risk" if risk == "High" else "low-risk"
-    risk_icon = "🔴" if risk == "High" else "🟢"
+    conf = result["confidence"]
+    
+    # Render main metric cards (Prediction and Risk Level)
+    render_metric_cards(result)
 
-    # ── Metric row ──
-    # ── Confidence gauge + metric cards ──
-    conf_pct   = conf * 100
-    # SVG arc parameters
-    radius     = 52
-    stroke_w   = 10
-    circumference = 2 * 3.14159 * radius
-    dash_offset   = circumference * (1 - conf / 1)   # filled portion
-    gauge_color   = "#ef5350" if risk == "High" else "#66bb6a"
+    # Render dynamic insights box
+    render_dynamic_insights(result)
 
-    gauge_html = f"""
-    <div style="display:flex; align-items:center; justify-content:center; margin-bottom:0.8rem;">
-      <!-- Circular confidence gauge -->
-      <div style="text-align:center; margin-right:1.5rem;">
-        <svg width="130" height="130" viewBox="0 0 130 130">
-          <!-- Background track -->
-          <circle cx="65" cy="65" r="{radius}" fill="none"
-                  stroke="rgba(255,255,255,0.08)" stroke-width="{stroke_w}"/>
-          <!-- Filled arc -->
-          <circle cx="65" cy="65" r="{radius}" fill="none"
-                  stroke="{gauge_color}" stroke-width="{stroke_w}"
-                  stroke-dasharray="{circumference:.1f}"
-                  stroke-dashoffset="{dash_offset:.1f}"
-                  stroke-linecap="round"
-                  transform="rotate(-90 65 65)"
-                  style="transition: stroke-dashoffset 0.8s ease;"/>
-          <!-- Centre text -->
-          <text x="65" y="58" text-anchor="middle"
-                font-size="22" font-weight="700" fill="{gauge_color}">{conf_pct:.1f}%</text>
-          <text x="65" y="76" text-anchor="middle"
-                font-size="11" fill="#7f8ccd" letter-spacing="1">CONFIDENCE</text>
-        </svg>
-      </div>
+    # Use tabs for detailed visualization
+    tab1, tab2 = st.tabs(["📊 Interactive Probabilities", "🧠 Grad-CAM Heatmap"])
+    
+    with tab1:
+        render_plotly_probabilities(result)
+        # ── Low Confidence Warning ──
+        if conf < 0.60:
+            st.warning("⚠️ **Low Confidence (*{pct}%*):** The model is not highly confident. Please ensure the image is a clear, well-lit, close-up shot of the skin lesion.".format(pct=int(conf*100)))
 
-      <!-- Prediction + Risk vertical stack -->
-      <div style="display:flex; flex-direction:column; gap:0.6rem; flex:1;">
-        <div class="metric-card">
-          <div class="metric-label">Prediction</div>
-          <div class="metric-value {risk_css}">{cls.upper()}</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Risk Level</div>
-          <div class="metric-value {risk_css}">{risk_icon} {risk}</div>
-        </div>
-      </div>
-    </div>
-    """
-    st.markdown(gauge_html, unsafe_allow_html=True)
-
-    st.markdown(f"<p style='color:#7f8ccd; margin:0 0 0.6rem; font-size:0.9rem;'>🔬 <b>{full_name}</b></p>",
-                unsafe_allow_html=True)
-
-    # ── All Classes probabilities ──
-    st.markdown('<div class="section-title">All Class Probabilities</div>', unsafe_allow_html=True)
-    all_probs = result.get("all_probs", top3)  # fallback to top3 if missing
-    for name, prob in all_probs:
-        bar_color = "#ef5350" if name in HIGH_RISK_CLASSES else "#66bb6a"
-        pct = round(prob * 100, 1)
-        is_top = name == cls
-        weight = "font-weight:700;" if is_top else ""
-        border = f"border-left: 3px solid {bar_color};" if is_top else ""
-        st.markdown(f"""
-        <div class="prob-bar-wrapper" style="{border} padding-left:6px;">
-            <div class="prob-label" style="{weight}">{name.upper()} – {CLASS_INFO[name]['full_name'][:38]}&nbsp;&nbsp;<b>{pct}%</b></div>
-            <div class="prob-bar-bg">
-                <div class="prob-bar-fill" style="width:{pct}%; background:{bar_color};"></div>
-            </div>
-        </div>""", unsafe_allow_html=True)
-
-    # ── Low Confidence Warning ──
-    if conf < 0.60:
-        st.warning("⚠️ **Low Confidence (*{pct}%*):** The model is not highly confident. Please ensure the image is a clear, well-lit, close-up shot of the skin lesion.".format(pct=int(conf*100)))
-
-    # ── Grad-CAM ──
-    if result.get("gradcam_overlay") is not None:
-        st.markdown('<div class="section-title">🧠 Grad-CAM Heatmap</div>', unsafe_allow_html=True)
-        st.image(
-            result["gradcam_overlay"],
-            caption="Grad-CAM: regions influencing the prediction (red = highest activation)",
-            use_container_width=True,
-        )
-        if risk == "High":
-            st.markdown(
-                '<div class="gradcam-note">⚠️ High-risk lesion detected. '
-                'Red areas highlight the regions the model focuses on most. '
-                'Please consult a dermatologist.</div>',
-                unsafe_allow_html=True,
+    with tab2:
+        if result.get("gradcam_overlay") is not None:
+            st.image(
+                result["gradcam_overlay"],
+                caption="Grad-CAM: regions influencing the prediction (red = highest activation)",
+                use_container_width=True,
             )
+            if result["risk"] == "High":
+                st.markdown(
+                    '<div class="gradcam-note">⚠️ High-risk lesion detected. '
+                    'Red areas highlight the regions the model focuses on most. '
+                    'Please consult a dermatologist.</div>',
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.info("Grad-CAM is not enabled or not available for this prediction.")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Download Report Button
+    report_md = get_downloadable_report(result)
+    st.download_button(
+        label="📄 Download Full Analysis Report",
+        data=report_md,
+        file_name="dermo_scope_report.md",
+        mime="text/markdown",
+        use_container_width=True
+    )
 
 # ────────────────────────────────────────────────────────────
 # Demo-mode random prediction (when model not loaded)
@@ -496,7 +341,8 @@ else:
                     live_result = st.session_state.get("live_result")
                     if live_result:
                         with result_placeholder.container():
-                            render_results(live_result)
+                            render_metric_cards(live_result)
+                            render_dynamic_insights(live_result)
                     time.sleep(0.5)
             else:
                 result_placeholder.info(

@@ -1,0 +1,152 @@
+/* app/style.css */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Outfit', sans-serif !important;
+}
+
+/* ── Global Dark Theme Override ── */
+.stApp {
+    background: radial-gradient(circle at 50% -20%, #111a2e, #0a0a14);
+    color: #e2e8f0;
+}
+
+/* ── Header Glassmorphism ── */
+.main-header {
+    background: rgba(22, 33, 62, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    text-align: center;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.main-header h1 {
+    background: linear-gradient(135deg, #ff6b6b, #e94560);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 3.2rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -1px;
+}
+
+.main-header p {
+    color: #a8b2d8;
+    font-size: 1.1rem;
+    margin: 0.8rem 0 0;
+    font-weight: 300;
+}
+
+/* ── Section Titles ── */
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 1.5rem 0 1rem;
+    padding-left: 10px;
+    border-left: 4px solid #e94560;
+    animation: slideInLeft 0.5s ease-out;
+}
+
+/* ── Metric Cards Glassmorphism ── */
+.metric-card {
+    background: rgba(30, 33, 64, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(233, 69, 96, 0.2);
+    border-color: rgba(233, 69, 96, 0.3);
+}
+
+.metric-label {
+    color: #8b9cdb;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.high-risk { color: #ff5252; text-shadow: 0 0 10px rgba(255, 82, 82, 0.3); }
+.low-risk  { color: #4caf50; text-shadow: 0 0 10px rgba(76, 175, 80, 0.3); }
+
+/* ── Dynamic Insights Info Box ── */
+.insight-box {
+    background: rgba(233, 69, 96, 0.05);
+    border-left: 4px solid #e94560;
+    border-radius: 0 12px 12px 0;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    animation: fadeIn 1s ease-out;
+}
+
+.insight-box.low-risk-box {
+    background: rgba(76, 175, 80, 0.05);
+    border-left-color: #4caf50;
+}
+
+.insight-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.insight-desc {
+    font-size: 0.95rem;
+    color: #c5cae9;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.insight-rec {
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 0.8rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+}
+
+/* ── Custom Expanders ── */
+.stExpander {
+    background: rgba(255,255,255,0.02) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 12px !important;
+}
+
+/* ── Animations ── */
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
