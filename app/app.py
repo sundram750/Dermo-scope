@@ -60,7 +60,7 @@ except ImportError:
 # Paths
 # ────────────────────────────────────────────────────────────
 BASE_DIR   = Path(__file__).resolve().parent.parent
-MODEL_PATH = BASE_DIR / "model_training" / "saved_model.h5"
+MODEL_PATH = BASE_DIR / "model_training" / "saved_model.tflite"
 
 # ────────────────────────────────────────────────────────────
 # Custom CSS

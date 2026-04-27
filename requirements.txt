@@ -2,8 +2,8 @@
 # Dermo-Scope – Python Dependencies
 # ─────────────────────────────────────────────
 
-# Core Deep Learning
-tensorflow-cpu~=2.15.0
+# Core Deep Learning (TFLite – lightweight, cloud-compatible)
+tflite-runtime
 
 # Web Application
 streamlit>=1.28.0
