@@ -316,7 +316,13 @@ else:
                 return av.VideoFrame.from_ndarray(img_bgr, format="bgr24")
 
         RTC_CONFIG = RTCConfiguration({
-            "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+            "iceServers": [
+                {"urls": ["stun:stun.l.google.com:19302"]},
+                {"urls": ["stun:stun1.l.google.com:19302"]},
+                {"urls": ["stun:stun2.l.google.com:19302"]},
+                {"urls": ["stun:stun3.l.google.com:19302"]},
+                {"urls": ["stun:stun4.l.google.com:19302"]},
+            ]
         })
 
         col_cam, col_res = st.columns([1.2, 1], gap="large")
