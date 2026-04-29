@@ -25,6 +25,8 @@ model = tf.keras.models.load_model(str(H5_PATH))
 print("Converting to TFLite...")
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 converter.optimizations = [tf.lite.Optimize.DEFAULT]   # enables dynamic-range quantization
+converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
+converter.target_spec.supported_types = [tf.float32]
 tflite_model = converter.convert()
 
 TFLITE_PATH.write_bytes(tflite_model)
