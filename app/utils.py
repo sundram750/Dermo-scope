@@ -2,14 +2,12 @@
 utils.py
 --------
 Helper utilities for the Dermo-Scope Streamlit application.
-
-Uses TFLite Runtime for inference – works on Streamlit Cloud with zero crashes.
+Uses TFLite Runtime for inference – lightweight and cloud-compatible.
 
 Provides:
-  - load_classification_model()   – Cached TFLite model loader
-  - process_image()               – End-to-end inference pipeline
-  - pil_to_array()                – PIL to numpy helper
-  - annotate_frame()              – WebRTC frame annotation
+  - load_classification_model()  – Cached TFLite model loader
+  - process_image()              – End-to-end inference pipeline
+  - pil_to_array()               – PIL → numpy helper
 """
 
 import numpy as np
@@ -20,18 +18,25 @@ from PIL import Image
 # ─────────────────────────────────────────────
 # TFLite Runtime Import (cloud-safe)
 # ─────────────────────────────────────────────
+# Inference backend – try in order of preference:
+#   1. ai_edge_litert  (Google's official successor, Python 3.11 Windows ✓)
+#   2. tflite_runtime  (older standalone package)
+#   3. tensorflow.lite (bundled inside full TF)
+# ─────────────────────────────────────────────
 try:
-    import tflite_runtime.interpreter as tflite
-    _TFLITE_BACKEND = "tflite_runtime"
+    import ai_edge_litert.interpreter as tflite
+    _TFLITE_BACKEND = "ai_edge_litert"
 except ImportError:
     try:
-        # Fallback: TFLite bundled inside full TensorFlow
-        import tensorflow as tf
-        tflite = tf.lite
-        _TFLITE_BACKEND = "tensorflow"
+        import tflite_runtime.interpreter as tflite
+        _TFLITE_BACKEND = "tflite_runtime"
     except ImportError:
-        tflite = None
-        _TFLITE_BACKEND = None
+        try:
+            import tensorflow.lite.python.interpreter as tflite
+            _TFLITE_BACKEND = "tensorflow_lite"
+        except ImportError:
+            tflite = None
+            _TFLITE_BACKEND = None
 
 # ─────────────────────────────────────────────
 # Constants
@@ -204,42 +209,4 @@ def process_image(
         "gradcam_overlay": None,   # Not supported with TFLite
     }
 
-# ─────────────────────────────────────────────
-# WebRTC Frame Annotation
-# ─────────────────────────────────────────────
-def annotate_frame(frame_bgr: np.ndarray, result: dict) -> np.ndarray:
-    """
-    Annotate a BGR webcam frame with prediction label and risk indicator.
 
-    Parameters
-    ----------
-    frame_bgr : np.ndarray   BGR frame from WebRTC
-    result    : dict         output from process_image()
-
-    Returns
-    -------
-    np.ndarray  annotated BGR frame
-    """
-    h, w = frame_bgr.shape[:2]
-    label = f"{result['predicted_class'].upper()} ({result['confidence']*100:.1f}%)"
-    risk  = result["risk"]
-
-    color_rgb = result["risk_color"]
-    color_bgr = (color_rgb[2], color_rgb[1], color_rgb[0])
-
-    overlay = frame_bgr.copy()
-    cv2.rectangle(overlay, (0, h - 60), (w, h), (0, 0, 0), -1)
-    frame_bgr = cv2.addWeighted(overlay, 0.6, frame_bgr, 0.4, 0)
-
-    cv2.putText(
-        frame_bgr, label,
-        (10, h - 35), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2,
-    )
-    risk_label = f"Risk: {risk}"
-    cv2.putText(
-        frame_bgr, risk_label,
-        (10, h - 12), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color_bgr, 2,
-    )
-    cv2.rectangle(frame_bgr, (0, 0), (w - 1, h - 1), color_bgr, 4)
-
-    return frame_bgr
