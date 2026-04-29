@@ -25,6 +25,7 @@ Pillow>=10.0.0
 
 # Media (required by streamlit-webrtc)
 av>=10.0.0
+tornado>=6.0.0
 
 # Optional – progress bars in training
 tqdm>=4.65.0
