@@ -84,10 +84,20 @@ st.markdown("""
 with st.sidebar:
     st.markdown("## ⚙️ Controls")
 
+    # Determine available input modes based on WebRTC availability
+    available_modes = ["🖼️ Upload Image"]
+    default_index = 0
+
+    if WEBRTC_AVAILABLE:
+        available_modes.insert(0, "📷 Live Webcam")
+        default_index = 0  # Webcam as default if available
+    else:
+        st.warning("⚠️ **Live Webcam mode unavailable** - WebRTC not supported in this environment (common on Streamlit Cloud). Use Upload Image mode instead.")
+
     input_mode = st.radio(
         "Input Mode",
-        ["📷 Live Webcam", "🖼️ Upload Image"],
-        index=0,
+        available_modes,
+        index=default_index,
     )
 
     st.markdown("---")
@@ -269,7 +279,7 @@ if input_mode == "🖼️ Upload Image":
 # ────────────────────────────────────────────────────────────
 # Mode B – Live Webcam (WebRTC)
 # ────────────────────────────────────────────────────────────
-else:
+if input_mode == "📷 Live Webcam":
     if not WEBRTC_AVAILABLE:
         st.error(
             "❌ `streamlit-webrtc` is not installed. "
@@ -360,6 +370,41 @@ else:
                     "📷 Click **START** above to activate your webcam.\n\n"
                     "The system will analyze your skin in real-time and display predictions here."
                 )
+
+# ────────────────────────────────────────────────────────────
+# Mode A – Upload Image
+# ────────────────────────────────────────────────────────────
+else:  # Upload Image mode
+    st.markdown('<div class="section-title">Image Upload Analysis</div>', unsafe_allow_html=True)
+
+    uploaded_file = st.file_uploader(
+        "Choose a skin lesion image...",
+        type=["jpg", "jpeg", "png"],
+        help="Upload a clear image of the skin lesion for analysis"
+    )
+
+    if uploaded_file is not None:
+        # Load and display image
+        img_pil = Image.open(uploaded_file)
+        img_rgb = pil_to_array(img_pil)
+
+        col_img, col_res = st.columns([1, 1], gap="large")
+
+        with col_img:
+            st.markdown('<div class="section-title">Original Image</div>', unsafe_allow_html=True)
+            st.image(img_rgb, caption="Uploaded image", use_container_width=True)
+
+        with col_res:
+            st.markdown('<div class="section-title">Analysis Results</div>', unsafe_allow_html=True)
+            with st.spinner("Analyzing image …"):
+                if model_loaded:
+                    result = process_image(model, img_rgb, enable_gradcam=enable_gradcam)
+                else:
+                    result = demo_prediction(img_rgb)
+                time.sleep(0.3)   # slight delay for UX feel
+            render_results(result)
+    else:
+        st.info("👆 Please upload a skin lesion image to begin analysis.")
 
 # ────────────────────────────────────────────────────────────
 # Footer
