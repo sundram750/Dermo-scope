@@ -1,8 +1,8 @@
 # ─────────────────────────────────────────────
 # Dermo-Scope – Python Dependencies (Lightweight)
 # ─────────────────────────────────────────────
-# Supports Python 3.9, 3.10, 3.11, 3.12, 3.13
-# Platform: Linux (Streamlit Cloud / Render / Railway) + Windows
+# Pinned to Python 3.11 (see runtime.txt)
+# Platform: Linux x86_64 (Streamlit Cloud) + Windows
 # ─────────────────────────────────────────────
 
 # Web Application
@@ -10,8 +10,9 @@ streamlit>=1.28.0
 
 # Deep Learning Inference
 # ai-edge-litert = Google's official TFLite successor
-# Has wheels for py3.9-3.13 on Linux x86_64, aarch64, macOS, Windows
-ai-edge-litert>=1.0.1
+# Pinned to 1.4.0 — last stable release with Linux x86_64 wheels for Python 3.11
+# DO NOT loosen this pin without checking: https://pypi.org/project/ai-edge-litert/#files
+ai-edge-litert==1.4.0
 
 # Computer Vision (headless = no GUI dependencies, safe for server)
 opencv-python-headless>=4.8.0
@@ -19,5 +20,5 @@ opencv-python-headless>=4.8.0
 # Image Processing
 Pillow>=10.0.0
 
-# Numerical
-numpy>=1.24.0
+# Numerical (cap <2.0 to keep compat with ai-edge-litert C extensions)
+numpy>=1.24.0,<2.0
