@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Dermo-Scope Lite is a browser-based skin lesion classifier demo using a local TFLite model."
+    />
+    <title>Dermo-Scope Lite</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23087f7a'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='white' stroke-width='6'/%3E%3Cpath d='M45 45l10 10' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="side-panel" aria-label="Project context">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true" data-lucide="scan-search"></span>
+          <div>
+            <p class="eyebrow">Browser ML review</p>
+            <h1>Dermo-Scope Lite</h1>
+          </div>
+        </div>
+
+        <section class="panel-block model-block" aria-labelledby="model-status-heading">
+          <div class="section-head">
+            <h2 id="model-status-heading">Runtime</h2>
+            <span id="runtimePill" class="status-pill status-loading">Loading</span>
+          </div>
+          <p id="runtimeDetail" class="muted">
+            Checking the Vercel LiteRT inference API.
+          </p>
+        </section>
+
+        <section class="panel-block" aria-labelledby="risk-heading">
+          <h2 id="risk-heading">Risk groups</h2>
+          <div class="risk-list">
+            <div class="risk-row">
+              <span class="risk-dot high"></span>
+              <span><strong>High review</strong> mel, bcc, akiec</span>
+            </div>
+            <div class="risk-row">
+              <span class="risk-dot low"></span>
+              <span><strong>Lower review</strong> nv, bkl, df, vasc</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-block" aria-labelledby="abcde-heading">
+          <h2 id="abcde-heading">ABCDE check</h2>
+          <dl class="check-list">
+            <div><dt>A</dt><dd>Asymmetry</dd></div>
+            <div><dt>B</dt><dd>Border changes</dd></div>
+            <div><dt>C</dt><dd>Color variation</dd></div>
+            <div><dt>D</dt><dd>Diameter growth</dd></div>
+            <div><dt>E</dt><dd>Evolving over time</dd></div>
+          </dl>
+        </section>
+
+        <section class="panel-block disclaimer" aria-labelledby="disclaimer-heading">
+          <h2 id="disclaimer-heading">Important</h2>
+          <p>
+            Educational demo only. This app is not a medical diagnostic tool and
+            should not replace a dermatologist or qualified clinician.
+          </p>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">HAM10000 seven-class classifier</p>
+            <h2>Skin lesion image review</h2>
+          </div>
+          <div class="topbar-actions">
+            <button id="resetButton" class="icon-button subtle" type="button" title="Reset review">
+              <span data-lucide="refresh-cw" aria-hidden="true"></span>
+              <span class="sr-only">Reset review</span>
+            </button>
+          </div>
+        </header>
+
+        <section class="analysis-grid" aria-label="Image review workspace">
+          <section class="surface capture-surface" aria-labelledby="capture-heading">
+            <div class="surface-head">
+              <div>
+                <p class="eyebrow">Input</p>
+                <h3 id="capture-heading">Image source</h3>
+              </div>
+              <div class="segmented" role="tablist" aria-label="Input mode">
+                <button
+                  id="uploadModeButton"
+                  class="segment active"
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  data-mode="upload"
+                >
+                  <span data-lucide="image-up" aria-hidden="true"></span>
+                  Upload
+                </button>
+                <button
+                  id="cameraModeButton"
+                  class="segment"
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  data-mode="camera"
+                >
+                  <span data-lucide="camera" aria-hidden="true"></span>
+                  Camera
+                </button>
+              </div>
+            </div>
+
+            <div id="uploadPanel" class="input-panel">
+              <label id="dropZone" class="drop-zone" for="fileInput">
+                <span data-lucide="upload-cloud" aria-hidden="true"></span>
+                <strong>Select or drop an image</strong>
+                <small>JPG, PNG, or WebP</small>
+              </label>
+              <input id="fileInput" type="file" accept="image/*" />
+            </div>
+
+            <div id="cameraPanel" class="input-panel camera-panel" hidden>
+              <video id="cameraPreview" class="camera-preview" autoplay muted playsinline></video>
+              <div class="camera-controls">
+                <button id="startCameraButton" class="button secondary" type="button">
+                  <span data-lucide="video" aria-hidden="true"></span>
+                  Start
+                </button>
+                <button id="captureButton" class="button primary" type="button" disabled>
+                  <span data-lucide="scan-line" aria-hidden="true"></span>
+                  Capture
+                </button>
+                <button id="stopCameraButton" class="icon-button subtle" type="button" title="Stop camera" disabled>
+                  <span data-lucide="square" aria-hidden="true"></span>
+                  <span class="sr-only">Stop camera</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="preview-frame">
+              <canvas id="imageCanvas" width="224" height="224" aria-label="Selected image preview"></canvas>
+              <div id="previewEmpty" class="preview-empty">
+                <span data-lucide="image" aria-hidden="true"></span>
+                <p>No image selected</p>
+              </div>
+            </div>
+
+            <div class="action-row">
+              <button id="analyzeButton" class="button primary" type="button" disabled>
+                <span data-lucide="activity" aria-hidden="true"></span>
+                Analyze image
+              </button>
+              <p id="inputHint" class="hint">Choose an image to enable analysis.</p>
+            </div>
+          </section>
+
+          <section class="surface result-surface" aria-labelledby="results-heading">
+            <div class="result-top">
+              <div>
+                <p class="eyebrow">Prediction</p>
+                <h3 id="results-heading">Awaiting image</h3>
+                <p id="predictionCode" class="muted">Model output will appear here.</p>
+              </div>
+              <span id="riskBadge" class="risk-badge neutral">Pending</span>
+            </div>
+
+            <div class="metric-row" aria-label="Prediction summary">
+              <div class="metric-card">
+                <span class="metric-label">Confidence</span>
+                <strong id="confidenceMetric">--</strong>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">Review level</span>
+                <strong id="reviewMetric">--</strong>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">Mode</span>
+                <strong id="modeMetric">Vercel API</strong>
+              </div>
+            </div>
+
+            <div class="probability-section">
+              <div class="section-head">
+                <h4>Class probabilities</h4>
+                <span id="topClassLabel" class="mini-label">None</span>
+              </div>
+              <div id="probabilityList" class="probability-list"></div>
+            </div>
+
+            <div id="insightPanel" class="insight-panel">
+              <span data-lucide="shield-alert" aria-hidden="true"></span>
+              <p>
+                Results are informational only. Use the score as a prompt for
+                clinical review, not as a diagnosis.
+              </p>
+            </div>
+
+            <div class="action-row">
+              <button id="downloadButton" class="button secondary" type="button" disabled>
+                <span data-lucide="download" aria-hidden="true"></span>
+                Report
+              </button>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
