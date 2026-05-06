@@ -1,10 +1,11 @@
 import base64
-import json
-from http.server import BaseHTTPRequestHandler
 from io import BytesIO
 from pathlib import Path
 
 import numpy as np
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from PIL import Image
 
 try:
@@ -52,6 +53,18 @@ _interpreter = None
 _input_details = None
 _output_details = None
 
+app = FastAPI(title="Dermo-Scope Lite API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
+
+
+class PredictRequest(BaseModel):
+    image: str
+
 
 def get_interpreter():
     global _interpreter, _input_details, _output_details
@@ -71,9 +84,6 @@ def get_interpreter():
 
 
 def decode_image(image_value):
-    if not isinstance(image_value, str):
-        raise ValueError("Expected an image data URL.")
-
     encoded = image_value.split(",", 1)[1] if "," in image_value else image_value
     raw = base64.b64decode(encoded)
     image = Image.open(BytesIO(raw)).convert("RGB")
@@ -110,7 +120,7 @@ def adapt_output(array, output_detail):
     return output / total
 
 
-def predict(image_value):
+def run_prediction(image_value):
     interpreter, input_details, output_details = get_interpreter()
     input_array = decode_image(image_value)
     input_tensor = adapt_input(input_array, input_details[0])
@@ -137,48 +147,28 @@ def predict(image_value):
     }
 
 
-class handler(BaseHTTPRequestHandler):
-    def do_OPTIONS(self):
-        self.send_response(204)
-        self._cors_headers()
-        self.end_headers()
+@app.get("/")
+def root_health():
+    return api_health()
 
-    def do_GET(self):
-        ok = tflite is not None and MODEL_PATH.exists()
-        payload = {
-            "ok": ok,
-            "runtime": "ai-edge-litert",
-            "model": MODEL_PATH.name,
-            "model_bytes": MODEL_PATH.stat().st_size if MODEL_PATH.exists() else 0,
-        }
-        if not ok:
-            payload["error"] = "LiteRT package or model file is unavailable."
-        self._json(200 if ok else 503, payload)
 
-    def do_POST(self):
-        try:
-            length = int(self.headers.get("Content-Length", "0"))
-            body = self.rfile.read(length)
-            payload = json.loads(body.decode("utf-8"))
-            image_value = payload.get("image")
-            if not image_value:
-                self._json(400, {"error": "Missing image field."})
-                return
+@app.get("/api")
+def api_health():
+    ok = tflite is not None and MODEL_PATH.exists()
+    payload = {
+        "ok": ok,
+        "runtime": "ai-edge-litert",
+        "model": MODEL_PATH.name,
+        "model_bytes": MODEL_PATH.stat().st_size if MODEL_PATH.exists() else 0,
+    }
+    if not ok:
+        payload["error"] = "LiteRT package or model file is unavailable."
+    return payload
 
-            self._json(200, predict(image_value))
-        except Exception as exc:  # Keep failures readable in the client.
-            self._json(500, {"error": str(exc)})
 
-    def _json(self, status, payload):
-        body = json.dumps(payload).encode("utf-8")
-        self.send_response(status)
-        self._cors_headers()
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-    def _cors_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+@app.post("/api/predict")
+def predict(request: PredictRequest):
+    try:
+        return run_prediction(request.image)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc

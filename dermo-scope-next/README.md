@@ -25,7 +25,7 @@ dermo-scope-next/
   requirements.txt
   vercel.json
   api/
-    predict.py
+    index.py
   models/
     dermo-scope.tflite
   src/
@@ -56,13 +56,14 @@ Camera capture requires a secure context in most browsers. It works on
 
 Import this folder as a Vercel project or run `vercel` from this directory.
 There is no frontend build command. Vercel serves the app as static files and
-deploys `api/predict.py` as a Python Function.
+deploys `api/index.py` as the Python Function entrypoint.
 
 ## Runtime notes
 
 The API dependencies are intentionally small:
 
 - `ai-edge-litert==2.1.4`
+- `fastapi`
 - `numpy`
 - `Pillow`
 
